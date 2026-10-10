@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>CSREP & FACEIT Uploader Pro</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo-wrap">
+        <span class="logo-dot"></span>
+        <h1>CSREP & FACEIT</h1>
+      </div>
+      <span class="badge">PRO EXTENSION</span>
+    </header>
+
+    <!-- Active Parameters Bar (shows only when syncing) -->
+    <div id="paramSummaryBar" class="param-summary-bar" style="display: none;">
+      <div class="param-col"><span class="param-lbl">Pages:</span> <strong id="summaryPages">3</strong></div>
+      <div class="param-div"></div>
+      <div class="param-col"><span class="param-lbl">Threads:</span> <strong id="summaryThreads">4</strong></div>
+      <div class="param-div"></div>
+      <div class="param-col"><span class="param-lbl">Steam:</span> <strong id="summarySteamId">7656...4264</strong></div>
+    </div>
+
+    <!-- Settings Card (IDLE state) -->
+    <div class="card" id="settingsCard">
+      <div class="field">
+        <label for="steamId">Steam ID</label>
+        <input type="text" id="steamId" placeholder="76561198434644264" spellcheck="false" autocomplete="off" />
+      </div>
+
+      <div class="field-row">
+        <div class="field flex-1">
+          <label for="maxPages">Страниц:</label>
+          <div class="select-wrap">
+            <select id="maxPages">
+              <option value="1">1 страница</option>
+              <option value="3" selected>3 страницы</option>
+              <option value="5">5 страниц</option>
+              <option value="10">10 страниц</option>
+              <option value="25">Все (25)</option>
+            </select>
+          </div>
+        </div>
+        <div class="field flex-1">
+          <label for="concurrency">Потоков:</label>
+          <div class="select-wrap">
+            <select id="concurrency">
+              <option value="2">2 потока</option>
+              <option value="4" selected>4 потока</option>
+              <option value="6">6 потоков</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="faceitApiKey">FACEIT API Key (опционально)</label>
+        <input type="password" id="faceitApiKey" placeholder="••••••••••••••••••••••••••••••••" />
+      </div>
+    </div>
+
+    <!-- Telemetry Card (Active Sync state) -->
+    <div class="card telemetry-card" id="progressCard" style="display: none;">
+      <div class="telemetry-header">
+        <span class="telemetry-stage" id="stageLabel">Загрузка в Cloudflare R2 (68%)</span>
+        <span class="telemetry-badge" id="percentBadge">68%</span>
+      </div>
+      
+      <div class="speed-readout">
+        <span id="speedVal" class="speed-num">7.4</span>
+        <span class="speed-unit">MB/s</span>
+      </div>
+
+      <!-- Segmented Progress Bar (10 chunky blocks) -->
+      <div class="segmented-bar" id="segmentedBar">
+        <div class="segment"></div>
+        <div class="segment"></div>
+        <div class="segment"></div>
+        <div class="segment"></div>
+        <div class="segment"></div>
+        <div class="segment"></div>
+        <div class="segment"></div>
+        <div class="segment"></div>
+        <div class="segment"></div>
+        <div class="segment"></div>
+      </div>
+
+      <div class="telemetry-detail" id="progressDetail">108.4 / 158.0 MB (Part 8/16)</div>
+    </div>
+
+    <!-- Action Button -->
+    <button id="syncBtn" class="btn-primary">
+      <span>⚡ Синхронизировать демки</span>
+    </button>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-box">
+        <span class="stat-title">Загружено:</span>
+        <span class="stat-num" id="statUploaded">0</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-title">Пропущено:</span>
+        <span class="stat-num" id="statSkipped">0</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-title">Ошибок:</span>
+        <span class="stat-num" id="statFailed">0</span>
+      </div>
+    </div>
+
+    <!-- Live Terminal Logs -->
+    <div class="logs-card">
+      <div class="logs-header">
+        <span class="logs-title">Лог</span>
+        <div class="logs-actions">
+          <button id="clearHistoryBtn" class="btn-pill" title="Сбросить историю">Сброс истории</button>
+          <button id="clearLogsBtn" class="btn-pill">Очистить лог</button>
+        </div>
+      </div>
+      <div class="terminal" id="terminalLogs">
+        <div class="log-line info">[—:—:—] Расширение готово к работе</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

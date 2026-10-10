@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSREP & FACEIT — Demo Uploader Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #080a0f;
+      --bg-surface: #0f131c;
+      --bg-card: #151b27;
+      --bg-card-hover: #1c2434;
+      --bg-card-active: #242e42;
+      --border-subtle: #1c2333;
+      --border-strong: #2a354d;
+      
+      --faceit-orange: #ff5500;
+      --faceit-orange-hover: #ff6a1f;
+      --faceit-glow: rgba(255, 85, 0, 0.22);
+      
+      --csrep-green: #00e676;
+      --csrep-glow: rgba(0, 230, 118, 0.2);
+      
+      --win-color: #00e676;
+      --win-bg: rgba(0, 230, 118, 0.12);
+      --win-border: rgba(0, 230, 118, 0.25);
+      
+      --loss-color: #ff4757;
+      --loss-bg: rgba(255, 71, 87, 0.12);
+      --loss-border: rgba(255, 71, 87, 0.25);
+      
+      --text-main: #f4f6fa;
+      --text-muted: #8e9bb0;
+      --text-dark: #505c70;
+      --blue: #3b82f6;
+      --yellow: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(16px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, #ff5500, #ff8c00);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 4px 18px var(--faceit-glow);
+    }
+
+    .brand-info h1 {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-status-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-idle {
+      background: rgba(142, 155, 176, 0.12);
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .status-active {
+      background: rgba(0, 230, 118, 0.14);
+      color: var(--csrep-green);
+      border: 1px solid rgba(0, 230, 118, 0.3);
+    }
+
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .status-active .pulse-dot {
+      animation: pulse 1.4s infinite;
+    }
+
+    .brand-info p {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* ─── BUTTONS & CONTROLS ─── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: inherit;
+      user-select: none;
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #ff5500, #ff7700);
+      color: white;
+      box-shadow: 0 4px 14px var(--faceit-glow);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, #ff6611, #ff8811);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--bg-card-hover);
+      border-color: var(--border-strong);
+    }
+
+    .btn-danger {
+      background: rgba(255, 71, 87, 0.15);
+      color: var(--loss-color);
+      border: 1px solid rgba(255, 71, 87, 0.35);
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: rgba(255, 71, 87, 0.25);
+    }
+
+    .btn-sm {
+      padding: 5px 12px;
+      font-size: 12px;
+      border-radius: 6px;
+    }
+
+    .select-input {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .select-input:focus {
+      border-color: var(--faceit-orange);
+    }
+
+    /* ─── MAIN LAYOUT ─── */
+    main {
+      flex: 1;
+      padding: 24px 28px;
+      max-width: 1440px;
+      margin: 0 auto;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 390px;
+      gap: 24px;
+    }
+
+    /* ─── KPI METRICS ─── */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .metric-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .metric-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+    }
+
+    .metric-primary::after { background: var(--faceit-orange); }
+    .metric-success::after { background: var(--csrep-green); }
+    .metric-warning::after { background: var(--yellow); }
+    .metric-info::after { background: var(--blue); }
+
+    .metric-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+
+    .metric-value {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .metric-desc {
+      font-size: 11px;
+      color: var(--text-dark);
+    }
+
+    /* ─── TABLE / CARD LIST ─── */
+    .card-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    .panel-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.015);
+    }
+
+    .panel-title {
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-tabs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filter-btn {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid transparent;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .filter-btn:hover {
+      color: var(--text-main);
+      background: var(--bg-card);
+    }
+
+    .filter-btn.active {
+      color: var(--text-main);
+      background: var(--bg-card);
+      border-color: var(--border-strong);
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      max-height: 580px;
+      overflow-y: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    thead th {
+      background: #0b0e14;
+      padding: 12px 16px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      transition: background 0.15s ease;
+    }
+
+    tbody tr:hover {
+      background: var(--bg-card);
+    }
+
+    tbody tr.active-row {
+      background: rgba(255, 85, 0, 0.08) !important;
+      border-left: 3px solid var(--faceit-orange);
+    }
+
+    td {
+      padding: 14px 16px;
+      vertical-align: middle;
+    }
+
+    .map-badge-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .map-icon-box {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: #1a2233;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .map-name-text {
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: -0.2px;
+    }
+
+    .score-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .score-win {
+      background: var(--win-bg);
+      color: var(--win-color);
+      border: 1px solid var(--win-border);
+    }
+
+    .score-loss {
+      background: var(--loss-bg);
+      color: var(--loss-color);
+      border: 1px solid var(--loss-border);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    .pill-done {
+      background: rgba(0, 230, 118, 0.12);
+      color: var(--csrep-green);
+      border: 1px solid rgba(0, 230, 118, 0.25);
+    }
+
+    .pill-uploading {
+      background: rgba(255, 85, 0, 0.15);
+      color: var(--faceit-orange);
+      border: 1px solid rgba(255, 85, 0, 0.3);
+      animation: pulse 1.4s infinite;
+    }
+
+    .pill-pending {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .pill-failed {
+      background: rgba(255, 71, 87, 0.15);
+      color: var(--loss-color);
+      border: 1px solid rgba(255, 71, 87, 0.3);
+    }
+
+    .pill-skipped {
+      background: rgba(245, 158, 11, 0.12);
+      color: var(--yellow);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+    }
+
+    .row-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .action-btn-link {
+      color: var(--blue);
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      transition: all 0.15s;
+    }
+
+    .action-btn-link:hover {
+      background: rgba(59, 130, 246, 0.2);
+    }
+
+    /* ─── SIDEBAR & LIVE TRANSFER ─── */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .monitor-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    .monitor-title {
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .progress-track {
+      height: 8px;
+      background: #1a2233;
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff5500, #ff8c00);
+      border-radius: 4px;
+      width: 0%;
+      transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .progress-fill-green {
+      background: linear-gradient(90deg, #00e676, #00b0ff);
+    }
+
+    .active-match-preview {
+      background: #0a0d13;
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .preview-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+    }
+
+    .preview-label {
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 10px;
+    }
+
+    .preview-val {
+      font-weight: 700;
+      color: var(--text-main);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ─── LIVE TERMINAL LOGS ─── */
+    .terminal-panel {
+      background: #080a0f;
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    .terminal-head {
+      padding: 10px 14px;
+      background: #0e121a;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .terminal-dots {
+      display: flex;
+      gap: 5px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .dot-r { background: #ff5f56; }
+    .dot-y { background: #ffbd2e; }
+    .dot-g { background: #27c93f; }
+
+    .terminal-body {
+      padding: 12px 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      line-height: 1.65;
+      height: 270px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: #cbd5e1;
+    }
+
+    .log-time { color: #475569; }
+    .log-info { color: #60a5fa; }
+    .log-success { color: #4ade80; font-weight: 700; }
+    .log-warn { color: #fbbf24; }
+    .log-error { color: #f87171; font-weight: 700; }
+
+    @keyframes pulse {
+      0% { opacity: 0.6; }
+      50% { opacity: 1; }
+      100% { opacity: 0.6; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">⚡</div>
+      <div class="brand-info">
+        <h1>CSREP & FACEIT <span class="brand-status-pill status-idle" id="app-status-badge"><span class="pulse-dot"></span> <span id="app-status-text">ОЖИДАНИЕ</span></span></h1>
+        <p>Прямая синхронизация и multipart-анализ демок</p>
+      </div>
+    </div>
+    <div class="header-controls">
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <label for="select-pages" style="font-size: 11px; color: var(--text-muted); font-weight: 700;">СТРАНИЦ:</label>
+        <select id="select-pages" class="select-input">
+          <option value="1">1 страница (20 матчей)</option>
+          <option value="3" selected>3 страницы (60 матчей)</option>
+          <option value="5">5 страниц (100 матчей)</option>
+          <option value="10">10 страниц (200 матчей)</option>
+          <option value="100">Все страницы (макс)</option>
+        </select>
+      </div>
+      <button class="btn btn-secondary" id="btn-refresh">🔄 Сканировать</button>
+      <button class="btn btn-primary" id="btn-start">🚀 Запустить все</button>
+      <button class="btn btn-secondary" id="btn-start-selected" style="display:none;">🎯 Выбранные (<span id="selected-count">0</span>)</button>
+      <button class="btn btn-danger" id="btn-stop" style="display:none;">⏹️ Остановить</button>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main>
+    <!-- LEFT: MATCHES & METRICS -->
+    <div class="content-left">
+      <!-- KPI METRICS -->
+      <div class="metrics-grid">
+        <div class="metric-card metric-primary">
+          <span class="metric-label">Матчи без демо</span>
+          <span class="metric-value" id="stat-total">0</span>
+          <span class="metric-desc">найдено на csrep.gg</span>
+        </div>
+        <div class="metric-card metric-success">
+          <span class="metric-label">Успешно загружено</span>
+          <span class="metric-value" id="stat-uploaded" style="color: var(--csrep-green);">0</span>
+          <span class="metric-desc">привязано к профилю</span>
+        </div>
+        <div class="metric-card metric-warning">
+          <span class="metric-label">Истёк срок FACEIT</span>
+          <span class="metric-value" id="stat-skipped" style="color: var(--yellow);">0</span>
+          <span class="metric-desc">файл удален сервером</span>
+        </div>
+        <div class="metric-card metric-info">
+          <span class="metric-label">Передано данных</span>
+          <span class="metric-value" id="stat-traffic" style="color: var(--blue);">0 MB</span>
+          <span class="metric-desc">в Cloudflare R2</span>
+        </div>
+      </div>
+
+      <!-- MATCHES PANEL -->
+      <div class="card-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>🎮</span> Очередь матчей
+            <span id="match-counter" style="font-size: 11px; color: var(--text-muted); font-weight: 600; margin-left: 8px;">0 матчей</span>
+          </div>
+          <div class="filter-tabs">
+            <button class="filter-btn active" data-filter="all">Все</button>
+            <button class="filter-btn" data-filter="pending">Ожидают</button>
+            <button class="filter-btn" data-filter="done">Загруженные</button>
+            <button class="btn btn-secondary btn-sm" id="btn-select-all" style="margin-left: 6px;">Выбрать все</button>
+            <button class="btn btn-secondary btn-sm" id="btn-deselect-all">Снять</button>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 32px;"><input type="checkbox" id="th-checkbox"></th>
+                <th>Карта</th>
+                <th>Счет & Итог</th>
+                <th>Дата игры</th>
+                <th>Статус</th>
+                <th style="text-align: right;">Действия</th>
+              </tr>
+            </thead>
+            <tbody id="matches-body">
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 48px 0;">
+                  Нажмите «Сканировать» для получения списка матчей
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: LIVE TRANSFER & TERMINAL -->
+    <div class="sidebar">
+      <!-- TRANSFER MONITOR -->
+      <div class="monitor-card">
+        <div class="monitor-title">
+          <span>⚡ Общий прогресс</span>
+          <span id="overall-percent" style="color: var(--faceit-orange);">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="overall-bar"></div>
+        </div>
+
+        <div class="monitor-title" style="margin-top: 4px;">
+          <span>📦 Текущий файл</span>
+          <span id="current-file-percent" style="color: var(--csrep-green);">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill progress-fill-green" id="current-file-bar"></div>
+        </div>
+
+        <div class="active-match-preview">
+          <div class="preview-row">
+            <span class="preview-label">Текущий матч</span>
+            <span class="preview-val" id="current-match-title" style="color: var(--text-main);">—</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview-label">Скорость передачи</span>
+            <span class="preview-val" id="current-speed-info" style="color: var(--csrep-green);">—</span>
+          </div>
+          <div class="preview-row">
+            <span class="preview-label">Статус</span>
+            <span class="preview-val" id="current-status-desc" style="color: var(--text-muted);">В ожидании задачи</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE LOG CONSOLE -->
+      <div class="terminal-panel">
+        <div class="terminal-head">
+          <div class="terminal-dots">
+            <div class="dot dot-r"></div>
+            <div class="dot dot-y"></div>
+            <div class="dot dot-g"></div>
+          </div>
+          <span>Live Console Stream</span>
+          <button class="btn btn-secondary btn-sm" id="btn-clear-logs" style="padding: 2px 6px; font-size: 10px;">Очистить</button>
+        </div>
+        <div class="terminal-body" id="log-container">
+          <div class="log-info">[System] Подключение к шине событий...</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const mapIcons = {
+      'de_mirage': '🏛️',
+      'de_dust2': '🏜️',
+      'de_ancient': '🌿',
+      'de_anubis': '🏺',
+      'de_inferno': '🔔',
+      'de_nuke': '☢️',
+      'de_vertigo': '🏢',
+      'de_cache': '🏭',
+      'de_train': '🚂',
+      'de_overpass': '🌉',
+    };
+
+    let selectedMatches = new Set();
+    let currentMatchesList = [];
+    let currentFilter = 'all';
+    let isRunning = false;
+
+    const logContainer = document.getElementById('log-container');
+    const matchesBody = document.getElementById('matches-body');
+
+    function appendLog(msg, type = 'info', timeStr = null) {
+      const line = document.createElement('div');
+      const time = timeStr || new Date().toLocaleTimeString('ru-RU');
+      line.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-${type}">${msg}</span>`;
+      logContainer.appendChild(line);
+      logContainer.scrollTop = logContainer.scrollHeight;
+    }
+
+    function initEventStream() {
+      const evtSource = new EventSource('/api/events');
+
+      evtSource.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          handleServerEvent(data);
+        } catch (err) {}
+      };
+
+      evtSource.onerror = () => {
+        setAppStatus('disconnected', 'СВЯЗЬ ПОТЕРЯНА');
+      };
+    }
+
+    function handleServerEvent(event) {
+      if (event.type === 'init') {
+        const state = event.state;
+        if (state.logs && state.logs.length > 0) {
+          logContainer.innerHTML = '';
+          state.logs.forEach(l => appendLog(l.message, l.level, l.time));
+        }
+        if (state.matches) {
+          currentMatchesList = state.matches;
+          renderMatches();
+        }
+        updateStats(state.stats);
+        updateProgress(state.currentProgress);
+        updateState(state.status === 'uploading' || state.status === 'scanning');
+      } else if (event.type === 'log') {
+        appendLog(event.message, event.level, event.time);
+      } else if (event.type === 'matches_found') {
+        currentMatchesList = event.matches;
+        renderMatches();
+      } else if (event.type === 'progress') {
+        updateProgress(event);
+      } else if (event.type === 'stats') {
+        updateStats(event.stats);
+      } else if (event.type === 'state') {
+        updateState(event.isRunning);
+      }
+    }
+
+    function setAppStatus(type, text) {
+      const badge = document.getElementById('app-status-badge');
+      const label = document.getElementById('app-status-text');
+      badge.className = `brand-status-pill ${type === 'active' ? 'status-active' : 'status-idle'}`;
+      label.textContent = text;
+    }
+
+    function updateStats(stats) {
+      if (!stats) return;
+      if (stats.total !== undefined) document.getElementById('stat-total').textContent = stats.total;
+      if (stats.uploaded !== undefined) document.getElementById('stat-uploaded').textContent = stats.uploaded;
+      if (stats.skipped !== undefined) document.getElementById('stat-skipped').textContent = stats.skipped;
+      if (stats.trafficMb !== undefined) document.getElementById('stat-traffic').textContent = `${stats.trafficMb.toFixed(1)} MB`;
+    }
+
+    function parseMatchScore(score) {
+      if (!score) return { scoreStr: '—', isWin: false };
+      let str = '';
+      let part1 = 0, part2 = 0;
+
+      if (typeof score === 'string') {
+        str = score;
+        const parts = score.replace('-', ':').split(':').map(Number);
+        if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+          part1 = parts[0];
+          part2 = parts[1];
+        }
+      } else if (Array.isArray(score)) {
+        part1 = Number(score[0]) || 0;
+        part2 = Number(score[1]) || 0;
+        str = `${part1}:${part2}`;
+      } else if (typeof score === 'object') {
+        const vals = Object.values(score).map(Number).filter(n => !isNaN(n));
+        if (vals.length >= 2) {
+          part1 = vals[0];
+          part2 = vals[1];
+          str = `${part1}:${part2}`;
+        } else {
+          str = JSON.stringify(score);
+        }
+      } else {
+        str = String(score);
+      }
+
+      return { scoreStr: str || '—', isWin: part1 > part2 };
+    }
+
+    function renderMatches() {
+      let filtered = currentMatchesList;
+      if (currentFilter === 'pending') filtered = currentMatchesList.filter(m => !m.statusClass || m.statusClass === 'pending');
+      if (currentFilter === 'done') filtered = currentMatchesList.filter(m => m.statusClass === 'done');
+
+      if (!filtered || filtered.length === 0) {
+        matchesBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--csrep-green); padding: 44px 0;">🎉 Все демки загружены или нет матчей для показа</td></tr>`;
+        document.getElementById('match-counter').textContent = '0 матчей';
+        return;
+      }
+
+      document.getElementById('match-counter').textContent = `${filtered.length} матчей`;
+      document.getElementById('stat-total').textContent = currentMatchesList.length;
+
+      matchesBody.innerHTML = filtered.map((m) => {
+        const icon = mapIcons[m.map] || '🎯';
+        const date = new Date(m.date).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+        const { scoreStr, isWin } = parseMatchScore(m.score);
+        const scoreClass = isWin ? 'score-win' : 'score-loss';
+        const isChecked = selectedMatches.has(m.csrepMatchId) ? 'checked' : '';
+
+        const statusClass = m.statusClass || 'pending';
+        const statusText = m.statusText || 'В очереди';
+
+        return `
+          <tr id="match-row-${m.csrepMatchId}" class="${m.isActive ? 'active-row' : ''}">
+            <td><input type="checkbox" class="match-check" data-id="${m.csrepMatchId}" ${isChecked}></td>
+            <td>
+              <div class="map-badge-item">
+                <div class="map-icon-box">${icon}</div>
+                <span class="map-name-text">${m.map}</span>
+              </div>
+            </td>
+            <td>
+              <span class="score-tag ${scoreClass}">
+                ${isWin ? '🏆' : '💀'} ${scoreStr}
+              </span>
+            </td>
+            <td style="color: var(--text-muted); font-size: 12px; font-weight: 500;">${date}</td>
+            <td><span class="status-pill pill-${statusClass}" id="status-${m.csrepMatchId}">${statusText}</span></td>
+            <td style="text-align: right;">
+              <div class="row-actions">
+                <button class="btn btn-secondary btn-sm btn-upload-single" data-id="${m.csrepMatchId}" title="Загрузить только этот матч">▶ Загрузить</button>
+                <a href="https://csrep.gg/match/${m.csrepMatchId}" target="_blank" class="action-btn-link" title="Открыть матч на csrep.gg">CSRep</a>
+                <a href="https://www.faceit.com/ru/cs2/room/${m.faceitMatchId}" target="_blank" class="action-btn-link" title="Открыть комнату FACEIT">FACEIT</a>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      bindMatchCheckboxes();
+    }
+
+    function bindMatchCheckboxes() {
+      document.querySelectorAll('.match-check').forEach(chk => {
+        chk.addEventListener('change', (e) => {
+          const id = e.target.getAttribute('data-id');
+          if (e.target.checked) selectedMatches.add(id);
+          else selectedMatches.delete(id);
+          updateSelectedUi();
+        });
+      });
+
+      document.querySelectorAll('.btn-upload-single').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const id = e.target.getAttribute('data-id');
+          appendLog(`Запуск загрузки отдельного матча (${id})...`, 'info');
+          await fetch('/api/upload-single', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ matchId: id })
+          });
+        });
+      });
+    }
+
+    function updateSelectedUi() {
+      const count = selectedMatches.size;
+      document.getElementById('selected-count').textContent = count;
+      document.getElementById('btn-start-selected').style.display = count > 0 && !isRunning ? 'inline-flex' : 'none';
+    }
+
+    function updateProgress(data) {
+      if (!data) return;
+      if (data.overallPercent !== undefined) {
+        document.getElementById('overall-percent').textContent = `${data.overallPercent}%`;
+        document.getElementById('overall-bar').style.width = `${data.overallPercent}%`;
+      }
+      if (data.filePercent !== undefined) {
+        document.getElementById('current-file-percent').textContent = `${data.filePercent}%`;
+        document.getElementById('current-file-bar').style.width = `${data.filePercent}%`;
+      }
+      if (data.matchTitle) {
+        document.getElementById('current-match-title').textContent = data.matchTitle;
+      }
+      if (data.speedInfo) {
+        document.getElementById('current-speed-info').textContent = data.speedInfo;
+      }
+      if (data.matchStatus) {
+        document.getElementById('current-status-desc').textContent = data.matchStatus;
+      }
+      if (data.activeMatchId) {
+        document.querySelectorAll('tbody tr').forEach(r => r.classList.remove('active-row'));
+        const row = document.getElementById(`match-row-${data.activeMatchId}`);
+        if (row) row.classList.add('active-row');
+
+        const statusEl = document.getElementById(`status-${data.activeMatchId}`);
+        if (statusEl && data.matchStatus) {
+          statusEl.className = `status-pill pill-${data.matchStatusClass || 'uploading'}`;
+          statusEl.textContent = data.matchStatus;
+        }
+      }
+    }
+
+    function updateState(running) {
+      isRunning = running;
+      document.getElementById('btn-start').style.display = isRunning ? 'none' : 'inline-flex';
+      document.getElementById('btn-refresh').disabled = isRunning;
+      document.getElementById('btn-stop').style.display = isRunning ? 'inline-flex' : 'none';
+      setAppStatus(isRunning ? 'active' : 'idle', isRunning ? 'ЗАГРУЗКА ДЕМОК' : 'ОЖИДАНИЕ');
+      updateSelectedUi();
+    }
+
+    // Обработчики кнопок
+    document.getElementById('btn-start').addEventListener('click', async () => {
+      const pages = parseInt(document.getElementById('select-pages').value) || 3;
+      appendLog(`Запуск загрузки всех найденных матчей (${pages} стр)...`, 'info');
+      await fetch('/api/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pages }),
+      });
+    });
+
+    document.getElementById('btn-start-selected').addEventListener('click', async () => {
+      const matchIds = Array.from(selectedMatches);
+      appendLog(`Запуск загрузки ${matchIds.length} выбранных матчей...`, 'info');
+      await fetch('/api/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ matchIds }),
+      });
+    });
+
+    document.getElementById('btn-stop').addEventListener('click', async () => {
+      appendLog('Запрошена остановка...', 'warn');
+      await fetch('/api/stop', { method: 'POST' });
+    });
+
+    document.getElementById('btn-refresh').addEventListener('click', async () => {
+      const pages = parseInt(document.getElementById('select-pages').value) || 3;
+      appendLog(`Сканирование csrep.gg (${pages} стр)...`, 'info');
+      await fetch('/api/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pages }),
+      });
+    });
+
+    document.getElementById('btn-select-all').addEventListener('click', () => {
+      currentMatchesList.forEach(m => selectedMatches.add(m.csrepMatchId));
+      document.querySelectorAll('.match-check').forEach(chk => chk.checked = true);
+      document.getElementById('th-checkbox').checked = true;
+      updateSelectedUi();
+    });
+
+    document.getElementById('btn-deselect-all').addEventListener('click', () => {
+      selectedMatches.clear();
+      document.querySelectorAll('.match-check').forEach(chk => chk.checked = false);
+      document.getElementById('th-checkbox').checked = false;
+      updateSelectedUi();
+    });
+
+    document.getElementById('th-checkbox').addEventListener('change', (e) => {
+      if (e.target.checked) {
+        currentMatchesList.forEach(m => selectedMatches.add(m.csrepMatchId));
+      } else {
+        selectedMatches.clear();
+      }
+      document.querySelectorAll('.match-check').forEach(chk => chk.checked = e.target.checked);
+      updateSelectedUi();
+    });
+
+    document.getElementById('btn-clear-logs').addEventListener('click', () => {
+      logContainer.innerHTML = '<div class="log-info">[System] Логи очищены.</div>';
+    });
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        currentFilter = e.target.getAttribute('data-filter');
+        renderMatches();
+      });
+    });
+
+    initEventStream();
+  </script>
+</body>
+</html>

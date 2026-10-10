@@ -1,0 +1,27 @@
+{
+  "name": "faceit-demo-uploader",
+  "version": "2.0.0",
+  "description": "Auto-download FACEIT demos and upload to csrep.gg (CLI & Studio)",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "all": "node index.js --all",
+    "watch": "node index.js --watch",
+    "login": "node index.js --login",
+    "ui": "node index.js --ui",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "playwright": "^1.62.1",
+    "zod": "^3.24.2",
+    "zstd-codec": "^0.1.5"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.11",
+    "vitest": "^4.1.11"
+  }
+}

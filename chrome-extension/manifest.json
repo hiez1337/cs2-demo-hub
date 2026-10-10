@@ -1,0 +1,64 @@
+{
+  "manifest_version": 3,
+  "name": "CSREP & FACEIT Demo Uploader Pro",
+  "version": "1.0.0",
+  "description": "Автоматическая синхронизация и загрузка недостающих демок с FACEIT на csrep.gg в один клик прямо из браузера.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "CSREP & FACEIT Uploader",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "permissions": [
+    "storage",
+    "activeTab",
+    "tabs",
+    "cookies",
+    "scripting",
+    "alarms"
+  ],
+  "host_permissions": [
+    "*://csrep.gg/*",
+    "*://*.csrep.gg/*",
+    "*://faceit.com/*",
+    "*://*.faceit.com/*",
+    "*://*.backblazeb2.com/*",
+    "*://*.faceit-cdn.net/*",
+    "*://*.r2.cloudflarestorage.com/*",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "scripts/service-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://csrep.gg/*",
+        "*://*.csrep.gg/*"
+      ],
+      "js": [
+        "scripts/content.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "*://faceit.com/*",
+        "*://*.faceit.com/*"
+      ],
+      "js": [
+        "scripts/faceit-content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
