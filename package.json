@@ -48,6 +48,7 @@
   "build": {
     "appId": "gg.csrep.demohub",
     "productName": "CS2 Demo Hub",
+    "npmRebuild": false,
     "directories": {
       "output": "release"
     },
@@ -62,6 +63,7 @@
       "src/config/**/*",
       "src/infrastructure/**/*",
       "chrome-extension/icons/icon-128.png",
+      "chrome-extension/icons/icon-256.png",
       "package.json"
     ],
     "extraMetadata": {
@@ -82,7 +84,8 @@
           ]
         }
       ],
-      "icon": "chrome-extension/icons/icon-128.png"
+      "icon": "chrome-extension/icons/icon-256.png",
+      "signAndEditExecutable": false
     },
     "nsis": {
       "oneClick": false,
