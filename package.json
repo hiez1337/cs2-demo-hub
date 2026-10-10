@@ -2,6 +2,7 @@
   "name": "faceit-demo-uploader",
   "version": "2.0.0",
   "description": "Auto-download FACEIT demos and upload to csrep.gg (CLI & Studio)",
+  "author": "CS2 Demo Hub Contributors",
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -38,11 +39,11 @@
     "autoprefixer": "^10.6.1",
     "concurrently": "^10.0.6",
     "electron": "^44.7.0",
+    "electron-builder": "^25.1.8",
     "postcss": "^8.5.29",
     "tailwindcss": "^4.3.3",
     "vite": "^8.3.4",
-    "vitest": "^4.1.11",
-    "electron-builder": "^25.1.8"
+    "vitest": "^4.1.11"
   },
   "build": {
     "appId": "gg.csrep.demohub",
