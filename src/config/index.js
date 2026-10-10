@@ -12,6 +12,10 @@ export class ConfigManager {
     this.config = this.load();
   }
 
+  get() {
+    return this.config;
+  }
+
   load() {
     let fileConfig = {};
     if (fs.existsSync(this.configPath)) {

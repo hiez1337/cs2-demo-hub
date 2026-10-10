@@ -22,5 +22,15 @@ describe('BrowserManager', () => {
 
     await manager.close();
     expect(manager.context).toBeNull();
+
+    // Ensure safe no-op when context is already closed
+    await manager.saveCookies();
+    await manager.close();
+    expect(manager.context).toBeNull();
+
+    // getContext returns existing context if already created
+    manager.context = mockContext;
+    const ctx = await manager.getContext();
+    expect(ctx).toBe(mockContext);
   });
 });

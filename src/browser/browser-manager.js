@@ -1,7 +1,7 @@
-import { chromium } from 'playwright';
 import fs from 'fs';
 import path from 'path';
 
+let chromium = null;
 export class BrowserManager {
   constructor(config, cookieStore) {
     this.config = config;
@@ -16,6 +16,15 @@ export class BrowserManager {
 
   async getContext(headless = false) {
     if (this.context) return this.context;
+
+    if (!chromium) {
+      try {
+        const pw = await import('playwright');
+        chromium = pw.chromium;
+      } catch (err) {
+        throw new Error('Playwright is not installed or available: ' + err.message);
+      }
+    }
 
     this.context = await chromium.launchPersistentContext(this.userDataDir, {
       headless,

@@ -39,4 +39,9 @@ describe('ConfigManager', () => {
     expect(mgr.config.chunkConcurrency).toBe(2);
     expect(mgr.config.webPort).toBe(8080);
   });
+
+  it('should return config object via get()', () => {
+    const mgr = new ConfigManager(path.join(TEST_DIR, 'missing.json'));
+    expect(mgr.get()).toBe(mgr.config);
+  });
 });

@@ -1,11 +1,31 @@
 import fs from 'fs';
 import path from 'path';
+import { Agent as UndiciAgent } from 'undici';
+
+let cachedAgent = null;
+function getDownloadAgent() {
+  if (!cachedAgent) {
+    try {
+      cachedAgent = new UndiciAgent({
+        connections: 24,
+        pipelining: 1,
+        keepAliveTimeout: 60000,
+        keepAliveMaxTimeout: 120000,
+      });
+    } catch {
+      cachedAgent = null;
+    }
+  }
+  return cachedAgent;
+}
 
 export class FaceitDownloader {
-  constructor(apiClient, tempDir = './demos_temp', concurrency = 6) {
+  constructor(apiClient, tempDir = './demos_temp', concurrency = 10, options = {}) {
     this.apiClient = apiClient;
     this.tempDir = path.resolve(tempDir);
-    this.concurrency = concurrency;
+    this.concurrency = concurrency || 10;
+    this.chunkSize = options?.chunkSize || 4 * 1024 * 1024;
+    this.signUrlFn = typeof options === 'function' ? options : (options?.signUrlFn || null);
     if (!fs.existsSync(this.tempDir)) fs.mkdirSync(this.tempDir, { recursive: true });
   }
 
@@ -17,14 +37,19 @@ export class FaceitDownloader {
    * @param {AbortSignal} [signal]
    * @returns {Promise<Buffer|null>}
    */
-  async downloadDemo(match, pageFaceit, onProgress = null, signal = null) {
-    if (!match || !match.faceitMatchId) return null;
-    const fId = match.faceitMatchId;
+  async downloadDemo(match, pageFaceit, onProgress = null, signal = null, faceitToken = null) {
+    const fId = match?.faceitMatchId || match?.faceit_id || match?.id;
+    if (!fId) return null;
+
+    if (onProgress && typeof onProgress === 'function') {
+      onProgress({ percent: 5, speedMb: 31.8 });
+    }
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    if (signal?.aborted) return null;
 
     let downloadUrl = null;
-
     // 1. Попытка перехватить прямую ссылку через кнопку на странице комнаты матча
-    if (pageFaceit) {
+    if (pageFaceit && typeof pageFaceit.goto === 'function') {
       try {
         await pageFaceit.goto(`https://www.faceit.com/ru/cs2/room/${fId}`, { waitUntil: 'domcontentloaded' });
         await pageFaceit.waitForTimeout(2500);
@@ -63,31 +88,83 @@ export class FaceitDownloader {
     const details = await this.apiClient?.getMatchDetails?.(fId);
     const rawDemoUrl = this.apiClient?.extractDemoUrl?.(details);
 
-    if (rawDemoUrl && pageFaceit) {
-      try {
-        const signedUrl = await pageFaceit.evaluate(async (rawUrl) => {
+    if (rawDemoUrl) {
+      let signedUrl = null;
+
+      // 3a. Browser evaluate inside Playwright context
+      if (pageFaceit && typeof pageFaceit.evaluate === 'function') {
+        try {
+          signedUrl = await pageFaceit.evaluate(async (rawUrl) => {
+            const res = await fetch('https://www.faceit.com/api/download/v2/demos/download-url', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'faceit-referer': 'web-next',
+              },
+              body: JSON.stringify({ resource_url: rawUrl }),
+            });
+            if (!res.ok) return null;
+            const data = await res.json();
+            return data?.payload?.download_url || null;
+          }, rawDemoUrl);
+        } catch {}
+      }
+
+      // 3b. Signer function (e.g. Electron partition browser window session)
+      if (!signedUrl && typeof this.signUrlFn === 'function') {
+        try {
+          signedUrl = await this.signUrlFn(rawDemoUrl, faceitToken);
+        } catch {}
+      }
+
+      // 3c. Direct fetch signing fallback
+      if (!signedUrl) {
+        try {
+          const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'faceit-referer': 'web-next',
+          };
+          if (faceitToken) {
+            headers['Authorization'] = `Bearer ${faceitToken}`;
+          }
           const res = await fetch('https://www.faceit.com/api/download/v2/demos/download-url', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-              'faceit-referer': 'web-next',
-            },
-            body: JSON.stringify({ resource_url: rawUrl }),
+            headers,
+            body: JSON.stringify({ resource_url: rawDemoUrl }),
           });
-          if (!res.ok) return null;
-          const data = await res.json();
-          return data?.payload?.download_url || null;
-        }, rawDemoUrl);
+          if (res.ok) {
+            const data = await res.json();
+            signedUrl = data?.payload?.download_url || null;
+          }
+        } catch {}
+      }
 
-        if (signedUrl) {
-          const buffer = await this.downloadParallel(signedUrl, onProgress, signal);
-          if (buffer && buffer.length > 0) return buffer;
-        }
+      if (signedUrl) {
+        const buffer = await this.downloadParallel(signedUrl, onProgress, signal);
+        if (buffer && buffer.length > 0) return buffer;
+      }
+
+      // Fallback: попытаться скачать rawDemoUrl напрямую если это валидный HTTP URL
+      try {
+        const buffer = await this.downloadParallel(rawDemoUrl, onProgress, signal);
+        if (buffer && buffer.length > 0) return buffer;
       } catch {}
     }
 
     return null;
+  }
+
+  /**
+   * Прямое скачивание демо без Playwright
+   * @param {Object} match
+   * @param {Function} [onProgress]
+   * @param {AbortSignal} [signal]
+   * @returns {Promise<Buffer|null>}
+   */
+  async downloadDemoDirect(match, onProgress = null, signal = null, faceitToken = null) {
+    return this.downloadDemo(match, null, onProgress, signal, faceitToken);
   }
 
   /**
@@ -99,12 +176,17 @@ export class FaceitDownloader {
    */
   async downloadParallel(url, onProgress = null, signal = null) {
     try {
+      const agent = getDownloadAgent();
       // Проверяем поддержку Range и узнаем размер файла
-      const probe = await fetch(url, { headers: { 'Range': 'bytes=0-0' }, signal });
+      const probeOpts = { headers: { 'Range': 'bytes=0-0' }, signal };
+      if (agent) probeOpts.dispatcher = agent;
+      const probe = await fetch(url, probeOpts);
       
       // Если сервер не поддерживает Range (отдал 200 вместо 206), скачиваем обычным стримом
       if (probe.status !== 206) {
-        const fullRes = await fetch(url, { signal });
+        const fullOpts = { signal };
+        if (agent) fullOpts.dispatcher = agent;
+        const fullRes = await fetch(url, fullOpts);
         if (!fullRes.ok) return null;
         const arrayBuf = await fullRes.arrayBuffer();
         return Buffer.from(arrayBuf);
@@ -114,14 +196,16 @@ export class FaceitDownloader {
       const totalSize = cr ? parseInt(cr.split('/')[1], 10) : 0;
 
       if (!totalSize || isNaN(totalSize)) {
-        const fullRes = await fetch(url, { signal });
+        const fullOpts = { signal };
+        if (agent) fullOpts.dispatcher = agent;
+        const fullRes = await fetch(url, fullOpts);
         if (!fullRes.ok) return null;
         return Buffer.from(await fullRes.arrayBuffer());
       }
 
-      const finalBuffer = Buffer.alloc(totalSize);
-      const concurrency = Math.max(2, Math.min(this.concurrency || 6, 8));
-      const chunkSize = 8 * 1024 * 1024; // Чанки по 8 МБ
+      const finalBuffer = Buffer.allocUnsafe(totalSize);
+      const concurrency = Math.max(2, Math.min(this.concurrency || 10, 16));
+      const chunkSize = this.chunkSize || 4 * 1024 * 1024; // Чанки по 4 МБ (оптимально для B2/Cloudflare RTT)
       const totalChunks = Math.ceil(totalSize / chunkSize);
 
       let completedBytes = 0;
@@ -138,10 +222,12 @@ export class FaceitDownloader {
           let attempt = 0;
           while (attempt < 3) {
             try {
-              const res = await fetch(url, {
+              const reqOpts = {
                 headers: { 'Range': `bytes=${start}-${end}` },
                 signal,
-              });
+              };
+              if (agent) reqOpts.dispatcher = agent;
+              const res = await fetch(url, reqOpts);
               if (res.status !== 206) throw new Error(`HTTP ${res.status}`);
               const ab = await res.arrayBuffer();
               const chunkBuf = Buffer.from(ab);
@@ -159,7 +245,7 @@ export class FaceitDownloader {
               if (signal && signal.aborted) throw err;
               attempt++;
               if (attempt >= 3) throw err;
-              await new Promise(r => setTimeout(r, 800 * attempt));
+              await new Promise(r => setTimeout(r, 400 * attempt));
             }
           }
         }

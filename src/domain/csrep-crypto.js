@@ -21,3 +21,34 @@ export function generateCsrepHeaders(additionalHeaders = {}) {
     ...additionalHeaders,
   };
 }
+
+export function buildCsrepAuthHeaders(sessionToken, additionalHeaders = {}) {
+  const extra = { ...additionalHeaders };
+  if (sessionToken) {
+    if (typeof sessionToken === 'string') {
+      const cleanToken = sessionToken.startsWith('csrep-access-token=')
+        ? sessionToken.replace('csrep-access-token=', '').split(';')[0].trim()
+        : sessionToken.trim();
+      extra['csrep-access-token'] = cleanToken;
+      extra['Cookie'] = sessionToken.startsWith('csrep-access-token=')
+        ? sessionToken
+        : `csrep-access-token=${cleanToken}`;
+    } else if (Array.isArray(sessionToken)) {
+      const tokenCookie = sessionToken.find(c => c && c.name === 'csrep-access-token');
+      if (tokenCookie && tokenCookie.value) {
+        extra['csrep-access-token'] = tokenCookie.value;
+      }
+      extra['Cookie'] = sessionToken
+        .filter(c => c && c.name && typeof c.value !== 'undefined')
+        .map(c => `${c.name}=${c.value}`)
+        .join('; ');
+    } else if (typeof sessionToken === 'object') {
+      if (sessionToken['csrep-access-token']) {
+        const val = sessionToken['csrep-access-token'];
+        extra['csrep-access-token'] = val;
+        extra['Cookie'] = `csrep-access-token=${val}`;
+      }
+    }
+  }
+  return generateCsrepHeaders(extra);
+}

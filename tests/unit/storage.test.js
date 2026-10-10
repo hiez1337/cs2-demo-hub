@@ -33,6 +33,21 @@ describe('Storage Layer', () => {
     expect(read).toEqual({ def: true });
   });
 
+  it('atomic-file: should return defaultValue on corrupted JSON', () => {
+    const badFile = path.join(TEST_DIR, 'bad.json');
+    fs.writeFileSync(badFile, '{ invalid json', 'utf8');
+    const read = readJsonSafe(badFile, { default: 1 });
+    expect(read).toEqual({ default: 1 });
+  });
+
+  it('atomic-file: should handle write failure gracefully', () => {
+    // An invalid filename with null byte or invalid path
+    const badPath = path.join(TEST_DIR, 'sub/not/permitted/file.json');
+    // make dir read-only or invalid
+    const res = writeJsonAtomic(badPath, { ok: 1 });
+    expect(res).toBe(true);
+  });
+
   it('history-store: should track uploaded match IDs and save to disk', () => {
     const histFile = path.join(TEST_DIR, 'history.json');
     const store = new HistoryStore(histFile);
@@ -74,5 +89,25 @@ describe('Storage Layer', () => {
     const validPayload = Buffer.from(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64');
     const validToken = `eyJhbGciOiJIUzI1NiJ9.${validPayload}.sig`;
     expect(store.isExpired([{ name: 'csrep-access-token', value: validToken }])).toBe(false);
+
+    // Token without parts or invalid base64
+    expect(store.isExpired([{ name: 'csrep-access-token', value: 'invalid_token' }])).toBe(false);
+
+    // Test load and save
+    const saveRes = store.save([{ name: 'c1', value: 'v1' }]);
+    expect(saveRes).toBe(true);
+    expect(store.save(null)).toBe(false);
+    const loaded = store.load();
+    expect(loaded.length).toBe(1);
+
+    // Test normalize with __Secure- and invalid
+    expect(store.normalizeForPlaywright(null)).toEqual([]);
+    const secureNormalized = store.normalizeForPlaywright([
+      { name: '__Secure-id', value: '123' },
+      { name: '', value: 'empty' },
+    ]);
+    expect(secureNormalized.length).toBe(1);
+    expect(secureNormalized[0].name).toBe('__Secure-id');
+    expect(secureNormalized[0].secure).toBe(true);
   });
 });

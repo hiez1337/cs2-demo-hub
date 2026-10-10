@@ -10,18 +10,84 @@
     "watch": "node index.js --watch",
     "login": "node index.js --login",
     "ui": "node index.js --ui",
+    "build": "npm run build:renderer",
+    "build:renderer": "vite build src/renderer",
+    "dist": "npm run build:renderer && electron-builder",
+    "dist:win": "npm run build:renderer && electron-builder --win",
+    "electron": "electron src/main/index.js",
+    "dev": "vite src/renderer",
+    "app": "electron src/main/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "better-sqlite3": "^13.0.3",
     "dotenv": "^16.4.7",
-    "playwright": "^1.62.1",
+    "lucide-react": "^1.55.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "zod": "^3.24.2",
     "zstd-codec": "^0.1.5"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-react": "^6.1.2",
     "@vitest/coverage-v8": "^4.1.11",
-    "vitest": "^4.1.11"
+    "autoprefixer": "^10.6.1",
+    "concurrently": "^10.0.6",
+    "electron": "^44.7.0",
+    "postcss": "^8.5.29",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.3.4",
+    "vitest": "^4.1.11",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "gg.csrep.demohub",
+    "productName": "CS2 Demo Hub",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "src/main/**/*",
+      "src/preload/**/*",
+      "src/storage/**/*",
+      "src/api/**/*",
+      "src/core/**/*",
+      "src/domain/**/*",
+      "src/config/**/*",
+      "src/infrastructure/**/*",
+      "chrome-extension/icons/icon-128.png",
+      "package.json"
+    ],
+    "extraMetadata": {
+      "main": "src/main/index.js"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "chrome-extension/icons/icon-128.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
   }
 }

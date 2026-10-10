@@ -8,8 +8,14 @@ describe('Infrastructure: process-guard', () => {
 
     const guard = registerProcessGuard(mockShutdown);
     await guard.trigger('TEST');
-
     expect(mockShutdown).toHaveBeenCalled();
+
+    // Test error in shutdown callback
+    const errorShutdown = vi.fn(async () => { throw new Error('fail'); });
+    const guard2 = registerProcessGuard(errorShutdown);
+    await guard2.trigger('FAIL');
+    expect(errorShutdown).toHaveBeenCalled();
+
     exitSpy.mockRestore();
   });
 });

@@ -1,27 +1,61 @@
 # ═══════════════════════════════════════════════
-# SENSITIVE DATA & SECRETS (CRITICAL)
+# SENSITIVE DATA, CREDENTIALS & DATABASES
 # ═══════════════════════════════════════════════
 .env
 .env.local
 .env.*.local
+!.env.example
 config.json
 cookies.json
 cookies.txt
 *.session.enc
+*.enc
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.db
 uploaded_history.json
 
 # ═══════════════════════════════════════════════
-# BROWSER SESSIONS & CACHE & DUMPS
+# BUILD ARTIFACTS & ELECTRON RELEASES
+# ═══════════════════════════════════════════════
+dist/
+release/
+out/
+build/
+*.exe
+*.blockmap
+*.AppImage
+*.dmg
+*.zip
+*.tar.gz
+
+# ═══════════════════════════════════════════════
+# BROWSER SESSIONS, CACHE & DEMO DUMPS
 # ═══════════════════════════════════════════════
 .browser_session/
 demos_temp/
+tests_temp*/
 *.dem
 *.dem.gz
 *.dem.zst
 .backup_v2/
+*.backup.js
 
 # ═══════════════════════════════════════════════
-# LOGS & COVERAGE
+# AGENT SCRATCHPADS & INTERNAL ARTIFACTS
+# ═══════════════════════════════════════════════
+.agents/
+AGENTS.md
+GEMINI.md
+PLAN.md
+usage-events-*.csv
+screenshots/*.json
+screenshots/*.html
+screenshots/*.sqlite*
+
+# ═══════════════════════════════════════════════
+# LOGS, COVERAGE & OS FILES
 # ═══════════════════════════════════════════════
 *.log
 npm-debug.log*
@@ -30,9 +64,9 @@ yarn-error.log*
 coverage/
 .DS_Store
 Thumbs.db
+Desktop.ini
 
 # ═══════════════════════════════════════════════
 # DEPENDENCIES
 # ═══════════════════════════════════════════════
 node_modules/
-*.zip

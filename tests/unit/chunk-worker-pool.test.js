@@ -55,4 +55,33 @@ describe('ChunkWorkerPool', () => {
     expect(result).toBe(true);
     expect(attempts).toBe(3);
   });
+
+  it('should support object configuration in constructor', () => {
+    const pool = new ChunkWorkerPool({ concurrency: 8, partSize: 5 * 1024 * 1024 });
+    expect(pool.concurrency).toBe(8);
+    expect(pool.partSize).toBe(5 * 1024 * 1024);
+  });
+
+  it('should fallback to defaults when object properties are omitted', () => {
+    const pool = new ChunkWorkerPool({});
+    expect(pool.concurrency).toBe(4);
+    expect(pool.partSize).toBe(10 * 1024 * 1024);
+  });
+
+  it('should prefetch presigned urls in pipeline without redundant calls', async () => {
+    const pool = new ChunkWorkerPool(2, 1024 * 1024);
+    const buffer = Buffer.alloc(4 * 1024 * 1024, 'b');
+    const callLog = [];
+    const getPresignUrlFn = vi.fn(async (partNum) => {
+      callLog.push(partNum);
+      return `https://storage.example.com/part-${partNum}`;
+    });
+
+    vi.spyOn(pool, 'uploadChunkWithRetry').mockImplementation(async () => true);
+    await pool.upload(buffer, getPresignUrlFn, () => {});
+
+    // Exactly 4 parts should be requested and in order
+    expect(getPresignUrlFn).toHaveBeenCalledTimes(4);
+    expect(callLog).toEqual([1, 2, 3, 4]);
+  });
 });

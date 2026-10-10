@@ -72,16 +72,29 @@ export class AppStateStore extends EventEmitter {
   }
 
   updateMatchStatus(csrepMatchId, statusClass, statusText) {
-    const match = this.state.matches.find(m => m.csrepMatchId === csrepMatchId);
+    const match = this.state.matches.find(m => (m.csrepMatchId === csrepMatchId || m.id === csrepMatchId));
     if (match) {
       match.statusClass = statusClass;
       match.statusText = statusText;
-      this.emit('matches_found', { matches: this.state.matches });
     }
+    const normalizedStatus = statusClass === 'done' ? 'uploaded' : (statusClass === 'active' ? 'uploading' : statusClass);
+    this.emit('matchUpdated', {
+      id: csrepMatchId,
+      csrepMatchId,
+      statusClass,
+      statusText,
+      status: normalizedStatus,
+      error: statusText,
+      error_message: statusText,
+    });
+    this.emit('matches_found', { matches: this.state.matches });
   }
 
   updateProgress(progressData) {
     this.state.progress = { ...this.state.progress, ...progressData };
-    this.emit('progress', { progress: this.state.progress });
+    this.emit('progress', {
+      ...progressData,
+      progress: this.state.progress,
+    });
   }
 }
